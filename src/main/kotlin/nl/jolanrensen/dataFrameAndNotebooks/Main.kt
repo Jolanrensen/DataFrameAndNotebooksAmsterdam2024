@@ -8,7 +8,6 @@ package nl.jolanrensen.dataFrameAndNotebooks
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.offsetAt
@@ -17,8 +16,6 @@ import kotlinx.datetime.toLocalDateTime
 import nl.jolanrensen.dataFrameAndNotebooks.GoTrain.Departure.Companion.convertToDeparture
 import org.jetbrains.kotlinx.dataframe.DataColumn
 import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.annotations.ColumnName
-import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.annotations.ImportDataSchema
 import org.jetbrains.kotlinx.dataframe.api.add
 import org.jetbrains.kotlinx.dataframe.api.colsOf
@@ -37,40 +34,22 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-@DataSchema
-interface Departure {
-    val cancelled: Boolean
-    val company: String
-    val delay: Int
-    val departureTime: Instant
-    val destinationActual: String
-    val destinationActualCodes: List<String>
-    val destinationPlanned: String
-    val lineNumber: Instant?
-    val name: String?
-    val platformActual: String
-    val platformChanged: Boolean
-    val platformPlanned: String
-    val remarks: List<String>
-    val serviceDate: LocalDate
-    val serviceId: String
-    val serviceNumber: String
-    val station: String
-    val status: Int
-    val timestamp: Instant
-    val tips: List<String>
-    val type: String
-    val typeCode: String
-    val via: String?
-    val destinationAndType: String
-    val departureTimeWithDelay: Instant
-    val wings: DataFrame<GoTrain.DepartureWing?>
+fun main() {
+    // my google cloud server running the server
+    val address = "http://34.141.147.240:8080"
+    val stationCode = "ASD" // Amsterdam Central
+
+    // generated:
+    GoTrain.Departure
+
+    getDeparturesForStation(stationCode, address).print(borders = true)
 }
 
+
 /**
- * Retrieves a [DataFrame]<[Departure]> of given [stationCode] and [address].
+ * Retrieves a [DataFrame]<[MyDeparture]> of given [stationCode] and [address].
  */
-fun getDeparturesForStation(stationCode: String, address: String): DataFrame<Departure> {
+fun getDeparturesForStation(stationCode: String, address: String): DataFrame<MyDeparture> {
     val df = DataFrame.readJson("$address/v2/departures/station/$stationCode")
         .getFrameColumn("departures")
         .first()
@@ -97,13 +76,10 @@ fun getDeparturesForStation(stationCode: String, address: String): DataFrame<Dep
         }
         .sortBy { departureTime }
         .renameToCamelCase()
-        .convertTo<Departure>()
-
-    df.schema().print()
+        .convertTo<MyDeparture>()
 
     return df
 }
-
 
 inline fun <reified T> DataColumn<T>.setToNullsWhere(maskColumn: DataColumn<Boolean>): DataColumn<T?> =
     mapIndexed { i, it -> if (maskColumn[i]) null else it }
@@ -119,13 +95,4 @@ operator fun LocalDateTime.plus(duration: Duration): LocalDateTime =
     toInstant(TimeZone.UTC)
         .plus(duration)
         .toLocalDateTime(TimeZone.UTC)
-
-fun main() {
-    // my google cloud server running the server
-    val address = "http://34.141.147.240:8080"
-    val stationCode = "ASD" // Amsterdam Central
-
-    getDeparturesForStation(stationCode, address).print(borders = true)
-
-}
 
