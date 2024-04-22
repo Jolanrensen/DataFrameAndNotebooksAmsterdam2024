@@ -3,6 +3,10 @@
 This repo contains the notebooks and code used at the April 24'th
 Kotlin MeetUp @Jetbrains in Amsterdam given by Jolan Rensen.
 
+<img alt="plot-live.svg" src="plot-live.svg" height="300"/>
+
+<img alt="plot.svg" src="plot.svg" height="300"/>
+
 Tools used:
  - [Kotlin for Data Analysis (overview)](https://kotlinlang.org/docs/data-analysis-overview.html)
  - [Kotlin DataFrame](https://github.com/Kotlin/dataframe)
