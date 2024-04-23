@@ -1,4 +1,5 @@
 // We import the data schema from openApi
+// This can also be done with a Gradle task
 @file:ImportDataSchema(
     name = "GoTrain",
     path = "https://raw.githubusercontent.com/rijdendetreinen/gotrain/main/openapi.yaml",
@@ -35,27 +36,31 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 fun main() {
+
+    // generated
+    GoTrain.SystemStatus
+
     // my google cloud server running the server
     val address = "http://34.141.147.240:8080"
     val stationCode = "ASD" // Amsterdam Central
-
-    // generated:
-    GoTrain.Departure
-
     getDeparturesForStation(stationCode, address).print(borders = true)
 }
 
 
 /**
- * Retrieves a [DataFrame]<[MyDeparture]> of given [stationCode] and [address].
+ * Using the generated [GoTrain.Departure] data schema,
+ * this function retrieves a preprocessed [DataFrame]<[MyDeparture]> of given [stationCode] and [address].
+ *
+ * We'll reuse this in the notebook!
  */
 fun getDeparturesForStation(stationCode: String, address: String): DataFrame<MyDeparture> {
     val df = DataFrame.readJson("$address/v2/departures/station/$stationCode")
-        .getFrameColumn("departures")
-        .first()
+        .getFrameColumn("departures").first()
+
         .convertToDeparture {
             convert<List<Any>>().with { it.map { it.toString() } } // convert (empty) List<Any> to List<String>
         }
+
         .add {
             "destinationAndType" from {
                 "$destinationPlanned ($type)" // type safe accessors!
@@ -74,8 +79,11 @@ fun getDeparturesForStation(stationCode: String, address: String): DataFrame<MyD
                     .seconds
             )
         }
+
         .sortBy { departureTime }
+
         .renameToCamelCase()
+
         .convertTo<MyDeparture>()
 
     return df
